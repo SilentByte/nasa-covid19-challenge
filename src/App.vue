@@ -86,6 +86,17 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <v-snackbar bottom right
+                    :color="snackbarColor"
+                    v-model="snackbar">
+            {{ snackbarText }}
+            <v-btn icon
+                   color="white"
+                   @click="snackbar = false">
+                <v-icon>mdi-close</v-icon>
+            </v-btn>
+        </v-snackbar>
     </v-app>
 </template>
 
@@ -345,6 +356,8 @@
         }
     }
 
+    export type SnackbarState = "success" | "error";
+
     @Component
     export default class App extends Vue {
         scene!: Scene;
@@ -353,6 +366,9 @@
         messageDialog = false;
         message = "";
         messagePending = false;
+        snackbar = false;
+        snackbarColor: SnackbarState = "success";
+        snackbarText = "";
 
         async initialize() {
             this.scene = new Scene(this.$refs.two as HTMLElement);
@@ -391,6 +407,7 @@
                     });
             } catch(e) {
                 console.error(e);
+                this.showSnackbar("error", "Your message couldn't be sent, please try again. :-)");
             } finally {
                 this.onCloseMessageDialog();
             }
@@ -400,6 +417,12 @@
             this.messageDialog = false;
             this.messagePending = false;
             this.message = "";
+        }
+
+        showSnackbar(state: SnackbarState, text: string) {
+            this.snackbar = true;
+            this.snackbarColor = state;
+            this.snackbarText = text;
         }
 
         mounted() {
