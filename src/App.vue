@@ -154,6 +154,7 @@
 
         soundTheme!: Howl;
         soundTrump!: Howl;
+        soundTwitter!: Howl;
 
         messages!: Message[];
 
@@ -213,14 +214,11 @@
             });
         }
 
-        collidesWithTrump(absoluteX: number, absoluteY: number) {
-            const x = absoluteX / this.two.width;
-            const y = absoluteY / this.two.height;
+        collidesWithNormalized(x1: number, y1: number, x2: number, y2: number, radius: number) {
+            const dx = x1 / this.two.width - x2;
+            const dy = y1 / this.two.height - y2;
 
-            const dx = x - 0.4;
-            const dy = y - 0.4;
-
-            return dx * dx + dy * dy < 0.1 * 0.1;
+            return dx * dx + dy * dy < radius * radius;
         }
 
         async load() {
@@ -239,6 +237,7 @@
 
                 this.soundTheme,
                 this.soundTrump,
+                this.soundTwitter,
             ] = await Promise.all([
                 this.loadSprite("./assets/background.jpg"),
                 this.loadSprite("./assets/planet-top.png", 508, -320),
@@ -261,6 +260,11 @@
                     "./assets/sfx/trump.mp3",
                     "./assets/sfx/trump.ogg",
                     "./assets/sfx/trump.webm",
+                ]),
+                this.loadSound([
+                    "./assets/sfx/twitter.mp3",
+                    "./assets/sfx/twitter.ogg",
+                    "./assets/sfx/twitter.webm",
                 ]),
             ]);
         }
@@ -394,23 +398,79 @@
             this.spritePlanetBottom.translation.y += Math.sin(frame * 0.01 + 800) * 0.05;
             this.spritePlanetBottom.rotation += 0.002;
 
-            this.messages = this.messages.filter(m => m.text.translation.x > -this.two.width * 4);
+            this.messages = this.messages.filter(m => {
+                if(m.text.translation.x > -this.two.width * 4) {
+                    return true;
+                } else {
+                    this.two.remove(m.text);
+                    return false;
+                }
+            });
+
             this.messages.forEach(m => {
                 m.text.translation.x -= m.speed;
             });
         }
 
+        actions = [
+            {
+                x: 0.4,
+                y: 0.4,
+                radius: 0.1,
+                action: () => {
+                    if(!this.soundTrump.playing()) {
+                        this.soundTrump.play();
+                    }
+                },
+            },
+            {
+                x: 0.76,
+                y: 0.28,
+                radius: 0.05,
+                action: () => {
+                    window.open("https://www.worldometers.info/coronavirus/", "_blank");
+                },
+            },
+            {
+                x: 0.84,
+                y: 0.45,
+                radius: 0.05,
+                action: () => {
+                    if(!this.soundTwitter.playing()) {
+                        this.soundTwitter.play();
+                        [
+                            "#flattenthecurve",
+                            "#covid19",
+                            "#coronavirus",
+                            "#wearamask",
+                            "#stopthespread",
+                            "#stayathome",
+                            "#thinkoftheelderly",
+                            "#crisis",
+                            "#economycollapses",
+                            "#trilliondollardebt",
+                            "#chinavirus",
+                            "#usavirus",
+                        ].forEach(m => this.showMessage(m));
+                    }
+                },
+            },
+        ];
+
         onMouseClick(e: MouseEvent) {
-            if(this.collidesWithTrump(e.clientX, e.clientY)) {
-                if(!this.soundTrump.playing()) {
-                    this.soundTrump.play();
+            this.actions.forEach(a => {
+                if(this.collidesWithNormalized(e.clientX, e.clientY, a.x, a.y, a.radius)) {
+                    a.action();
                 }
-            }
+            });
         }
 
         onMouseMove(root: HTMLElement, e: MouseEvent) {
-            root.style.cursor = this.collidesWithTrump(e.clientX, e.clientY)
-                ? "pointer" : "default";
+            console.log(e.clientX / this.two.width + " " + e.clientY / this.two.height);
+            root.style.cursor
+                = this.actions.some(a => this.collidesWithNormalized(e.clientX, e.clientY, a.x, a.y, a.radius))
+                ? "pointer"
+                : "default";
         }
     }
 
