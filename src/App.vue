@@ -148,11 +148,9 @@
         spriteTriangleBottom: any;
         spriteTriangleFront: any;
         spriteTriangleXRay: any;
-
         maskTriangle: any;
 
-        soundMars!: Howl;
-        soundAtmosphere!: Howl;
+        soundTheme!: Howl;
 
         messages!: Message[];
 
@@ -213,8 +211,7 @@
                 this.spriteTriangleFront,
                 this.spriteTriangleXRay,
 
-                this.soundMars,
-                this.soundAtmosphere,
+                this.soundTheme,
             ] = await Promise.all([
                 this.loadSprite("./assets/debug-overlay.jpg"),
                 this.loadSprite("./assets/background.jpg"),
@@ -229,21 +226,20 @@
                 this.loadSprite("./assets/triangle-front.png", 40, 5),
                 this.loadSprite("./assets/xray.jpg", 200),
 
-                this.loadSound(["./assets/sfx/mars.mp3"]),
-                this.loadSound(["./assets/sfx/atmosphere.mp3"]),
+                this.loadSound([
+                    "./assets/sfx/theme.mp3",
+                    "./assets/sfx/theme.ogg",
+                    "./assets/sfx/theme.webm",
+                ]),
             ]);
         }
 
         start() {
             this.mute();
 
-            this.soundMars.volume(0.65);
-            this.soundMars.loop(true);
-            this.soundMars.play();
-
-            this.soundAtmosphere.volume(0.1);
-            this.soundAtmosphere.loop(true);
-            this.soundAtmosphere.play();
+            this.soundTheme.volume(0.65);
+            this.soundTheme.loop(true);
+            this.soundTheme.play();
 
             this.two.clear();
 
@@ -293,13 +289,11 @@
         }
 
         mute() {
-            this.soundMars.mute(true);
-            this.soundAtmosphere.mute(true);
+            this.soundTheme.stop();
         }
 
         unmute() {
-            this.soundMars.mute(false);
-            this.soundAtmosphere.mute(false);
+            this.soundTheme.play();
         }
 
         showMessage(message: string) {
@@ -312,7 +306,7 @@
                 weight: 900,
             });
 
-            text.translation.x = this.two.width + 200;
+            text.translation.x = this.two.width + 50;
             text.translation.y = (this.two.height / 2 * (Math.random() * 1.9 - 0.95));
             text.fill = "#fff";
             text.stroke = "#000";
@@ -441,7 +435,7 @@
                     snap.docs.forEach(doc => this.messages.push(doc.data().text));
                 });
 
-            this.messageShowInterval = setInterval(() => this.onShowNextMessage(), 1000);
+            this.messageShowInterval = setInterval(() => this.onShowNextMessage(), 2000);
         }
 
         onToggleMute() {
