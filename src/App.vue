@@ -29,12 +29,17 @@
     import Two from "two.js";
     import * as utils from "@/utils";
 
+    const PI = Math.PI;
+    const TAU = Math.PI * 2.0;
+
     class Scene {
         two: Two & any;
 
         layerBackground!: Two.Group;
         layerForeground!: Two.Group;
         layerOverlay!: Two.Group;
+
+        groupWhale!: Two.Group;
 
         spriteDebugOverlay: any;
         spriteBackground: any;
@@ -79,29 +84,43 @@
             this.layerForeground = this.two.makeGroup();
             this.layerOverlay = this.two.makeGroup();
 
+            this.groupWhale = this.two.makeGroup();
+            this.groupWhale.add(this.spriteWhale);
+
             this.layerBackground.add(this.spriteBackground);
-            this.layerForeground.add(this.spriteWhale);
+            this.layerForeground.add(this.groupWhale);
             this.layerOverlay.add(this.spriteDebugOverlay);
 
-            this.spriteDebugOverlay.opacity = 0.5;
+            this.spriteDebugOverlay.opacity = 0.0;
 
-            this.two.update();
+            this.two
+                .bind("update", (frame: number) => this.onUpdate(frame))
+                .bind("resize", () => this.onResize())
+                .trigger("resize");
+        }
+
+        start() {
+            this.two.play();
+        }
+
+        onResize() {
+            this.two.scene.scale = Math.min(this.two.width / 1920, this.two.height / 1080);
+            this.two.scene.translation.set(this.two.width / 2, this.two.height / 2);
+        }
+
+        onUpdate(frame: number) {
+            this.groupWhale.translation.y = Math.cos(frame * 0.02) * 5;
+            this.groupWhale.rotation = Math.sin(frame * 0.02) * 0.025;
         }
 
         constructor(element: HTMLElement) {
             this.two = new Two({
-                autostart: true,
+                autostart: false,
                 fullscreen: true,
+                type: Two.Types.webgl,
             });
 
             this.two.appendTo(element);
-
-            this.two.bind("resize", () => {
-                this.two.scene.scale = Math.min(this.two.width / 1920, this.two.height / 1080);
-                this.two.scene.translation.set(this.two.width / 2, this.two.height / 2);
-            });
-
-            this.two.trigger("resize");
         }
 
         destroy() {
@@ -122,6 +141,7 @@
                 await utils.timeout(1000);
 
                 this.initializing = false;
+                this.scene.start();
             });
         }
 
