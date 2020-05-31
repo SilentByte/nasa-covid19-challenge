@@ -15,7 +15,24 @@
                                          size="60" />
                 </v-layout>
             </v-overlay>
+
             <div ref="two" class="screen"></div>
+
+            <v-bottom-sheet persistent inset
+                            hide-overlay
+                            width="0"
+                            class="elevation-0"
+                            style="background: none"
+                            :value="true">
+
+                <v-layout row ma-3 align-center justify-center>
+                    <v-btn large dark icon
+                           @click="onToggleMute">
+                        <v-icon v-if="muted">mdi-music-off</v-icon>
+                        <v-icon v-else>mdi-music</v-icon>
+                    </v-btn>
+                </v-layout>
+            </v-bottom-sheet>
         </v-content>
     </v-app>
 </template>
@@ -140,6 +157,8 @@
         }
 
         start() {
+            this.mute();
+
             this.soundMars.volume(0.65);
             this.soundMars.loop(true);
             this.soundMars.play();
@@ -181,6 +200,8 @@
             this.spriteDebugOverlay.opacity = 0.0;
 
             this.maskTriangle = this.two.makePath(0, 0, 0, 0, 0, 0);
+            this.maskTriangle.fill = "#000";
+
             this.groupWhaleXRay.mask = this.maskTriangle;
 
             this.two
@@ -189,6 +210,16 @@
                 .trigger("resize");
 
             this.two.play();
+        }
+
+        mute() {
+            this.soundMars.mute(true);
+            this.soundAtmosphere.mute(true);
+        }
+
+        unmute() {
+            this.soundMars.mute(false);
+            this.soundAtmosphere.mute(false);
         }
 
         onResize() {
@@ -264,6 +295,7 @@
     export default class App extends Vue {
         scene!: Scene;
         initializing = true;
+        muted = true;
 
         async initialize() {
             this.scene = new Scene(this.$refs.two as HTMLElement);
@@ -273,6 +305,16 @@
 
             this.initializing = false;
             this.scene.start();
+        }
+
+        onToggleMute() {
+            if(this.muted) {
+                this.scene.unmute();
+                this.muted = false;
+            } else {
+                this.scene.mute();
+                this.muted = true;
+            }
         }
 
         mounted() {
