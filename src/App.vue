@@ -16,7 +16,11 @@
                 </v-layout>
             </v-overlay>
 
-            <div ref="two" class="screen"></div>
+            <div ref="two"
+                 class="screen"
+                 @click="onMouseClick"
+                 @mousemove="onMouseMove">
+            </div>
 
             <v-bottom-sheet persistent
                             hide-overlay
@@ -151,8 +155,23 @@
         maskTriangle: any;
 
         soundTheme!: Howl;
+        soundTrump!: Howl;
 
         messages!: Message[];
+
+        constructor(element: HTMLElement) {
+            this.two = new Two({
+                autostart: false,
+                fullscreen: true,
+                type: Two.Types.webgl,
+            });
+
+            this.two.appendTo(element);
+        }
+
+        destroy() {
+            this.two.clear();
+        }
 
         loadSprite(url: string, x: number = 0, y: number = 0) {
             const capture: any = {
@@ -196,6 +215,16 @@
             });
         }
 
+        collidesWithTrump(absoluteX: number, absoluteY: number) {
+            const x = absoluteX / this.two.width;
+            const y = absoluteY / this.two.height;
+
+            const dx = x - 0.4;
+            const dy = y - 0.4;
+
+            return dx * dx + dy * dy < 0.1 * 0.1;
+        }
+
         async load() {
             [
                 this.spriteDebugOverlay,
@@ -212,6 +241,7 @@
                 this.spriteTriangleXRay,
 
                 this.soundTheme,
+                this.soundTrump,
             ] = await Promise.all([
                 this.loadSprite("./assets/debug-overlay.jpg"),
                 this.loadSprite("./assets/background.jpg"),
@@ -231,13 +261,16 @@
                     "./assets/sfx/theme.ogg",
                     "./assets/sfx/theme.webm",
                 ]),
+                this.loadSound([
+                    "./assets/sfx/trump.mp3",
+                    "./assets/sfx/trump.ogg",
+                    "./assets/sfx/trump.webm",
+                ]),
             ]);
         }
 
         start() {
-            this.mute();
-
-            this.soundTheme.volume(0.65);
+            this.soundTheme.volume(0.75);
             this.soundTheme.loop(true);
             this.soundTheme.play();
 
@@ -376,18 +409,17 @@
             });
         }
 
-        constructor(element: HTMLElement) {
-            this.two = new Two({
-                autostart: false,
-                fullscreen: true,
-                type: Two.Types.webgl,
-            });
-
-            this.two.appendTo(element);
+        onMouseClick(e: MouseEvent) {
+            if(this.collidesWithTrump(e.clientX, e.clientY)) {
+                if(!this.soundTrump.playing()) {
+                    this.soundTrump.play();
+                }
+            }
         }
 
-        destroy() {
-            this.two.clear();
+        onMouseMove(root: HTMLElement, e: MouseEvent) {
+            root.style.cursor = this.collidesWithTrump(e.clientX, e.clientY)
+                ? "pointer" : "default";
         }
     }
 
@@ -397,7 +429,7 @@
     export default class App extends Vue {
         scene!: Scene;
         initializing = true;
-        muted = true;
+        muted = false;
         messageDialog = false;
         message = "";
         messages: string[] = [];
@@ -436,6 +468,12 @@
                 });
 
             this.messageShowInterval = setInterval(() => this.onShowNextMessage(), 2000);
+        }
+
+        showSnackbar(state: SnackbarState, text: string) {
+            this.snackbar = true;
+            this.snackbarColor = state;
+            this.snackbarText = text;
         }
 
         onToggleMute() {
@@ -478,16 +516,17 @@
 
         onShowNextMessage() {
             const message = this.messages.shift();
-            console.log(message);
             if(message) {
                 this.scene.showMessage(message);
             }
         }
 
-        showSnackbar(state: SnackbarState, text: string) {
-            this.snackbar = true;
-            this.snackbarColor = state;
-            this.snackbarText = text;
+        onMouseClick(e: MouseEvent) {
+            this.scene.onMouseClick(e);
+        }
+
+        onMouseMove(e: MouseEvent) {
+            this.scene.onMouseMove(this.$refs.two as HTMLElement, e);
         }
 
         mounted() {
