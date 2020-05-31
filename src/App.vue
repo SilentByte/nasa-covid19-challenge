@@ -459,6 +459,10 @@
                             "#chinavirus",
                             "#usavirus",
                             "#privacyisdead",
+                            "#lockdown",
+                            "#airportsclosed",
+                            "#stuckathome",
+                            "#who",
                         ].forEach(m => this.showMessage(m));
                     }
                 },
@@ -472,6 +476,14 @@
                         this.soundBigBen.play();
                         window.open("https://www.youtube.com/watch?v=2klmuggOElE", "_blank");
                     }
+                },
+            },
+            {
+                x: 0.65,
+                y: 0.53,
+                radius: 0.15,
+                action: () => {
+                    window.open("https://www.nytimes.com/2020/04/07/opinion/digital-privacy-coronavirus.html", "_blank");
                 },
             },
         ];
