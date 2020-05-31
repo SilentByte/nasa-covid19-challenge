@@ -36,10 +36,10 @@
         two: Two & any;
 
         layerBackground!: Two.Group;
-        layerForeground!: Two.Group;
         layerOverlay!: Two.Group;
 
         groupWhale!: Two.Group;
+        groupWhaleXRay!: Two.Group;
 
         spriteDebugOverlay: any;
         spriteBackground: any;
@@ -53,9 +53,7 @@
         spriteTriangleBottom: any;
         spriteTriangleFront: any;
 
-        triangleBackOffsetX = -20;
-        triangleBottomOffsetX = 120;
-        triangleFrontOffsetX = 220;
+        maskTriangle: any;
 
         loadSprite(url: string, x: number = 0, y: number = 0) {
             const capture: any = {
@@ -73,8 +71,8 @@
                         sprite.translation.set(x, y);
 
                         resolve(sprite);
-                    } catch {
-                        reject();
+                    } catch(e) {
+                        reject(e);
                     }
                 });
             });
@@ -101,7 +99,7 @@
                 this.loadSprite("./assets/planet-right.png", 648, -68),
                 this.loadSprite("./assets/planet-bottom.png", 542, 195),
                 this.loadSprite("./assets/whale.png", 18, 30),
-                this.loadSprite("./assets/whale-xray.png", 342, 232),
+                this.loadSprite("./assets/whale-xray.png", 18, 30),
                 this.loadSprite("./assets/triangle-back.png", -20, -32), // -170, -32
                 this.loadSprite("./assets/triangle-bottom.png", -63, 275), // -33, 275
                 this.loadSprite("./assets/triangle-front.png", 40, 5), // 70, 5
@@ -110,11 +108,14 @@
             this.two.clear();
 
             this.layerBackground = this.two.makeGroup();
-            this.layerForeground = this.two.makeGroup();
             this.layerOverlay = this.two.makeGroup();
 
             this.groupWhale = this.two.makeGroup();
-            this.groupWhale.add(this.spriteWhale);
+            this.groupWhaleXRay = this.two.makeGroup(this.spriteWhaleXRay);
+            this.groupWhale.add(
+                this.spriteWhale,
+                this.groupWhaleXRay,
+            );
 
             this.layerBackground.add(
                 this.spriteBackground,
@@ -125,9 +126,6 @@
 
                 this.spriteTriangleBack,
                 this.spriteTriangleBottom,
-            );
-
-            this.layerForeground.add(
                 this.groupWhale,
                 this.spriteTriangleFront,
             );
@@ -135,6 +133,11 @@
             this.layerOverlay.add(this.spriteDebugOverlay);
 
             this.spriteDebugOverlay.opacity = 0.0;
+
+            this.maskTriangle = this.two.makePath(420, -300, 210, 230, 680, 310);
+            this.maskTriangle.fill = "#000";
+
+            this.groupWhaleXRay.mask = this.maskTriangle;
 
             this.two
                 .bind("update", (frame: number) => this.onUpdate(frame))
@@ -162,19 +165,24 @@
 
             // this.spriteTriangleBack.translation.x += whaleTriangleTranslationX;
             this.spriteTriangleBack.translation.y += whaleTriangleTranslationY;
-            this.spriteTriangleBack.rotation = whaleTriangleRotation;
+            // this.spriteTriangleBack.rotation = whaleTriangleRotation;
 
             // this.spriteTriangleBottom.translation.x += whaleTriangleTranslationX;
             this.spriteTriangleBottom.translation.y += whaleTriangleTranslationY;
-            this.spriteTriangleBottom.rotation = whaleTriangleRotation;
+            // this.spriteTriangleBottom.rotation = whaleTriangleRotation;
 
             // this.spriteTriangleFront.translation.x += whaleTriangleTranslationX;
             this.spriteTriangleFront.translation.y += whaleTriangleTranslationY;
-            this.spriteTriangleFront.rotation = whaleTriangleRotation;
+            // this.spriteTriangleFront.rotation = whaleTriangleRotation;
 
-            this.spriteTriangleBack.translation.x = this.triangleBackOffsetX + Math.cos(frame * 0.01) * 190;
-            this.spriteTriangleBottom.translation.x = this.triangleBottomOffsetX + Math.cos(frame * 0.01) * 190;
-            this.spriteTriangleFront.translation.x = this.triangleFrontOffsetX + Math.cos(frame * 0.01) * 190;
+            this.spriteTriangleBack.translation.x = 40 + this.groupWhale.translation.x - 90 + Math.cos(frame * 0.01) * 140;
+            this.spriteTriangleBottom.translation.x = 40 + this.groupWhale.translation.x + 50 + Math.cos(frame * 0.01) * 140;
+            this.spriteTriangleFront.translation.x = 40 + this.groupWhale.translation.x + 150 + Math.cos(frame * 0.01) * 140;
+
+            this.maskTriangle.translation.set(0, 0);
+            this.maskTriangle.vertices[0].set(this.spriteTriangleFront.translation.x - 122, this.spriteTriangleFront.translation.y - 300);
+            this.maskTriangle.vertices[1].set(this.spriteTriangleFront.translation.x - 330, this.spriteTriangleFront.translation.y + 218);
+            this.maskTriangle.vertices[2].set(this.spriteTriangleFront.translation.x + 150, this.spriteTriangleFront.translation.y + 295);
 
             this.spritePlanetTop.translation.x += Math.cos(frame * 0.01 + 200) * 0.02;
             this.spritePlanetTop.translation.y += Math.sin(frame * 0.01 + 200) * 0.05;
@@ -227,8 +235,9 @@
             this.$nextTick(async () => {
                 try {
                     await this.initialize();
-                } catch {
+                } catch(e) {
                     // HACK: Simplify debugging due to insufficient error handling in Two.js.
+                    console.error(e);
                     location.reload();
                 }
             });
