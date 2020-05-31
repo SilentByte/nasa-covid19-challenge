@@ -11,6 +11,9 @@ service cloud.firestore {
             allow create: if remote().text is string
                           && remote().text.size() <= 80
                           && remote().text.size() > 0;
+
+            allow get: if true;
+            allow list: if request.query.limit <= 20;
         }
     }
 }

@@ -76,7 +76,8 @@
                                       counter="80"
                                       v-model="message"
                                       label="Your Message"
-                                      placeholder="I'm feeling confident things will get better soon." />
+                                      placeholder="I'm feeling confident things will get better soon."
+                                      hint="Your message will be publicly visible." />
                     </v-form>
                 </v-card-text>
                 <v-card-actions class="mx-1">
@@ -375,6 +376,7 @@
             this.spritePlanetBottom.translation.y += Math.sin(frame * 0.01 + 800) * 0.05;
             this.spritePlanetBottom.rotation += 0.002;
 
+            this.messages = this.messages.filter(m => m.text.translation.x > -this.two.width * 4);
             this.messages.forEach(m => {
                 m.text.translation.x -= m.speed;
             });
@@ -404,10 +406,14 @@
         muted = true;
         messageDialog = false;
         message = "";
+        messages: string[] = [];
         messagePending = false;
         snackbar = false;
         snackbarColor: SnackbarState = "success";
         snackbarText = "";
+
+        messageShowInterval = 0;
+        cancelMessageSubscription!: any;
 
         async initialize() {
             this.scene = new Scene(this.$refs.two as HTMLElement);
@@ -417,6 +423,25 @@
 
             this.initializing = false;
             this.scene.start();
+
+            db
+                .collection("messages")
+                .orderBy("createdOn", "desc")
+                .limit(20)
+                .get()
+                .then(snap => {
+                    snap.docs.forEach(doc => this.messages.push(doc.data().text));
+                });
+
+            this.cancelMessageSubscription = db
+                .collection("messages")
+                .orderBy("createdOn", "desc")
+                .limit(1)
+                .onSnapshot(snap => {
+                    snap.docs.forEach(doc => this.messages.push(doc.data().text));
+                });
+
+            this.messageShowInterval = setInterval(() => this.onShowNextMessage(), 1000);
         }
 
         onToggleMute() {
@@ -443,8 +468,6 @@
                         createdOn: Timestamp.now(),
                         text: this.message,
                     });
-
-                this.scene.showMessage(this.message);
             } catch(e) {
                 console.error(e);
                 this.showSnackbar("error", "Your message couldn't be sent, please try again. :-)");
@@ -457,6 +480,14 @@
             this.messageDialog = false;
             this.messagePending = false;
             this.message = "";
+        }
+
+        onShowNextMessage() {
+            const message = this.messages.shift();
+            console.log(message);
+            if(message) {
+                this.scene.showMessage(message);
+            }
         }
 
         showSnackbar(state: SnackbarState, text: string) {
@@ -478,6 +509,8 @@
         }
 
         beforeDestroy() {
+            clearInterval(this.messageShowInterval);
+            this.cancelMessageSubscription();
             this.scene.destroy();
         }
     }
