@@ -155,6 +155,7 @@
         soundTheme!: Howl;
         soundTrump!: Howl;
         soundTwitter!: Howl;
+        soundBigBen!: Howl;
 
         messages!: Message[];
 
@@ -238,6 +239,7 @@
                 this.soundTheme,
                 this.soundTrump,
                 this.soundTwitter,
+                this.soundBigBen,
             ] = await Promise.all([
                 this.loadSprite("./assets/background.jpg"),
                 this.loadSprite("./assets/planet-top.png", 508, -320),
@@ -265,6 +267,11 @@
                     "./assets/sfx/twitter.mp3",
                     "./assets/sfx/twitter.ogg",
                     "./assets/sfx/twitter.webm",
+                ]),
+                this.loadSound([
+                    "./assets/sfx/bigben.mp3",
+                    "./assets/sfx/bigben.ogg",
+                    "./assets/sfx/bigben.webm",
                 ]),
             ]);
         }
@@ -451,7 +458,19 @@
                             "#trilliondollardebt",
                             "#chinavirus",
                             "#usavirus",
+                            "#privacyisdead",
                         ].forEach(m => this.showMessage(m));
+                    }
+                },
+            },
+            {
+                x: 0.78,
+                y: 0.63,
+                radius: 0.05,
+                action: () => {
+                    if(!this.soundBigBen.playing()) {
+                        this.soundBigBen.play();
+                        window.open("https://www.youtube.com/watch?v=2klmuggOElE", "_blank");
                     }
                 },
             },
