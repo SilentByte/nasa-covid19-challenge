@@ -74,7 +74,8 @@
                         How do <strong>you</strong> feel? Hopeful? Anxious? Tell the world&hellip;
                     </div>
 
-                    <v-form class="mt-5">
+                    <v-form class="mt-5"
+                            @submit.prevent>
                         <v-text-field outlined
                                       autofocus
                                       counter="80"
@@ -87,6 +88,7 @@
                 <v-card-actions class="mx-1">
                     <v-spacer />
                     <v-btn large text
+                           type="submit"
                            color="accent"
                            :loading="messagePending"
                            :disabled="message.length > 80 && message.length === 0"
