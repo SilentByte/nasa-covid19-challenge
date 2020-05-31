@@ -2,8 +2,13 @@ node_modules/
 dist/
 .idea/
 .vscode/
+.firebase/
 
 .env.local
 .env.*.local
+.firebaserc
 
 npm-debug.log*
+
+service-account-key.json
+*.log

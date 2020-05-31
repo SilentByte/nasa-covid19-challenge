@@ -1,0 +1,15 @@
+
+rules_version = '2';
+
+function remote() {
+    return request.resource.data;
+}
+
+service cloud.firestore {
+    match /databases/{database}/documents {
+        match /messages/{feedback} {
+            allow create: if remote().text is string
+                          && remote().text.size() <= 80;
+        }
+    }
+}
