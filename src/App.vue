@@ -37,7 +37,12 @@
                            @click="onComposeMessage">
                         <v-icon>mdi-message-text</v-icon>
                     </v-btn>
-                    <v-spacer />
+
+                    <v-btn dark text
+                           target="_blank"
+                           href="https://twitter.com/RicoBeti">
+                        @RicoBeti
+                    </v-btn>
                 </v-toolbar>
             </v-bottom-sheet>
         </v-content>
@@ -79,7 +84,7 @@
                     <v-btn large text
                            color="accent"
                            :loading="messagePending"
-                           :disabled="message.length > 80"
+                           :disabled="message.length > 80 && message.length === 0"
                            @click="onSendMessage">
                         Send
                     </v-btn>
@@ -116,6 +121,11 @@
 
     import * as utils from "@/utils";
 
+    interface Message {
+        text: any;
+        speed: number;
+    }
+
     class Scene {
         two: Two & any;
 
@@ -142,6 +152,8 @@
 
         soundMars!: Howl;
         soundAtmosphere!: Howl;
+
+        messages!: Message[];
 
         loadSprite(url: string, x: number = 0, y: number = 0) {
             const capture: any = {
@@ -269,6 +281,8 @@
 
             this.groupWhaleXRay.mask = this.maskTriangle;
 
+            this.messages = [];
+
             this.two
                 .bind("update", (frame: number) => this.onUpdate(frame))
                 .bind("resize", () => this.onResize())
@@ -285,6 +299,27 @@
         unmute() {
             this.soundMars.mute(false);
             this.soundAtmosphere.mute(false);
+        }
+
+        showMessage(message: string) {
+            const size = Math.random() * 30 + 20;
+            const text = this.two.makeText(message, 0, 0, {
+                family: "Ubuntu, sans-serif",
+                size: size,
+                leading: size,
+                alignment: "left",
+                weight: 900,
+            });
+
+            text.translation.x = this.two.width + 200;
+            text.translation.y = (this.two.height / 2 * (Math.random() * 1.9 - 0.95));
+            text.fill = "#fff";
+            text.stroke = "#000";
+
+            this.messages.push({
+                text,
+                speed: Math.random() * 3 + 2,
+            });
         }
 
         onResize() {
@@ -339,6 +374,10 @@
             this.spritePlanetBottom.translation.x += Math.cos(frame * 0.01 + 800) * 0.02;
             this.spritePlanetBottom.translation.y += Math.sin(frame * 0.01 + 800) * 0.05;
             this.spritePlanetBottom.rotation += 0.002;
+
+            this.messages.forEach(m => {
+                m.text.translation.x -= m.speed;
+            });
         }
 
         constructor(element: HTMLElement) {
@@ -398,13 +437,14 @@
             this.messagePending = true;
 
             try {
-                console.log(this.message);
                 await db
                     .collection("messages")
                     .add({
                         createdOn: Timestamp.now(),
                         text: this.message,
                     });
+
+                this.scene.showMessage(this.message);
             } catch(e) {
                 console.error(e);
                 this.showSnackbar("error", "Your message couldn't be sent, please try again. :-)");

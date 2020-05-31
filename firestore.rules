@@ -9,7 +9,8 @@ service cloud.firestore {
     match /databases/{database}/documents {
         match /messages/{message} {
             allow create: if remote().text is string
-                          && remote().text.size() <= 80;
+                          && remote().text.size() <= 80
+                          && remote().text.size() > 0;
         }
     }
 }
