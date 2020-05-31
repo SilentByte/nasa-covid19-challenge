@@ -258,5 +258,7 @@
         width: 100%;
         height: 100%;
         background-color: #121212;
+        background-image: url("./assets/screen-background.jpg");
+        background-size: 100% 100%;
     }
 </style>
