@@ -7,7 +7,7 @@ function remote() {
 
 service cloud.firestore {
     match /databases/{database}/documents {
-        match /messages/{feedback} {
+        match /messages/{message} {
             allow create: if remote().text is string
                           && remote().text.size() <= 80;
         }

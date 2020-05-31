@@ -34,13 +34,58 @@
 
                     <v-btn large dark icon
                            class="mx-2"
-                           @click="onSendMessage">
+                           @click="onComposeMessage">
                         <v-icon>mdi-message-text</v-icon>
                     </v-btn>
                     <v-spacer />
                 </v-toolbar>
             </v-bottom-sheet>
         </v-content>
+
+        <v-dialog max-width="500"
+                  v-model="messageDialog"
+                  @input="onCloseMessageDialog">
+            <v-card>
+                <v-card-title>
+                    <span>
+                        How are you holding up?
+                    </span>
+
+                    <v-spacer />
+
+                    <v-btn icon
+                           @click="onCloseMessageDialog">
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                </v-card-title>
+
+                <v-card-text class="my-0 py-0">
+                    <div>
+                        These are challenging times for everyone. How are <strong>YOU</strong> coping with COVID-19?
+                        How do <strong>you</strong> feel? Hopeful? Anxious? Tell the world&hellip;
+                    </div>
+
+                    <v-form class="mt-5">
+                        <v-text-field outlined
+                                      autofocus
+                                      counter="80"
+                                      v-model="message"
+                                      label="Your Message"
+                                      placeholder="I'm feeling confident things will get better soon." />
+                    </v-form>
+                </v-card-text>
+                <v-card-actions class="mx-1">
+                    <v-spacer />
+                    <v-btn large text
+                           color="accent"
+                           :loading="messagePending"
+                           :disabled="message.length > 80"
+                           @click="onSendMessage">
+                        Send
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-app>
 </template>
 
@@ -53,10 +98,12 @@
     import Two from "two.js";
     import { Howl } from "howler";
 
-    import * as utils from "@/utils";
+    import {
+        db,
+        Timestamp,
+    } from "@/firebase";
 
-    // const PI = Math.PI;
-    // const TAU = Math.PI * 2.0;
+    import * as utils from "@/utils";
 
     class Scene {
         two: Two & any;
@@ -303,6 +350,9 @@
         scene!: Scene;
         initializing = true;
         muted = true;
+        messageDialog = false;
+        message = "";
+        messagePending = false;
 
         async initialize() {
             this.scene = new Scene(this.$refs.two as HTMLElement);
@@ -324,8 +374,32 @@
             }
         }
 
-        onSendMessage() {
-            //
+        onComposeMessage() {
+            this.messageDialog = true;
+        }
+
+        async onSendMessage() {
+            this.messagePending = true;
+
+            try {
+                console.log(this.message);
+                await db
+                    .collection("messages")
+                    .add({
+                        createdOn: Timestamp.now(),
+                        text: this.message,
+                    });
+            } catch(e) {
+                console.error(e);
+            } finally {
+                this.onCloseMessageDialog();
+            }
+        }
+
+        onCloseMessageDialog() {
+            this.messageDialog = false;
+            this.messagePending = false;
+            this.message = "";
         }
 
         mounted() {
