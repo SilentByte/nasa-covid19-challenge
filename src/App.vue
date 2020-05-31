@@ -27,6 +27,8 @@
     } from "vue-property-decorator";
 
     import Two from "two.js";
+    import { Howl } from "howler";
+
     import * as utils from "@/utils";
 
     // const PI = Math.PI;
@@ -56,6 +58,9 @@
 
         maskTriangle: any;
 
+        soundMars!: Howl;
+        soundAtmosphere!: Howl;
+
         loadSprite(url: string, x: number = 0, y: number = 0) {
             const capture: any = {
                 texture: null,
@@ -79,7 +84,26 @@
             });
         }
 
-        async initialize() {
+        loadSound(urls: string[]): any {
+            return new Promise((resolve, reject) => {
+                const howl = new Howl({
+                    src: urls,
+                    autoplay: false,
+                    preload: true,
+                    loop: false,
+                });
+
+                howl.once("load", () => {
+                    resolve(howl);
+                });
+
+                howl.once("loaderror", (id: any, message: string) => {
+                    reject(new Error(message));
+                });
+            });
+        }
+
+        async load() {
             [
                 this.spriteDebugOverlay,
                 this.spriteBackground,
@@ -93,6 +117,9 @@
                 this.spriteTriangleBottom,
                 this.spriteTriangleFront,
                 this.spriteTriangleXRay,
+
+                this.soundMars,
+                this.soundAtmosphere,
             ] = await Promise.all([
                 this.loadSprite("./assets/debug-overlay.jpg"),
                 this.loadSprite("./assets/background.jpg"),
@@ -106,7 +133,20 @@
                 this.loadSprite("./assets/triangle-bottom.png", -63, 275),
                 this.loadSprite("./assets/triangle-front.png", 40, 5),
                 this.loadSprite("./assets/xray.jpg", 200),
+
+                this.loadSound(["./assets/sfx/mars.mp3"]),
+                this.loadSound(["./assets/sfx/atmosphere.mp3"]),
             ]);
+        }
+
+        start() {
+            this.soundMars.volume(0.65);
+            this.soundMars.loop(true);
+            this.soundMars.play();
+
+            this.soundAtmosphere.volume(0.1);
+            this.soundAtmosphere.loop(true);
+            this.soundAtmosphere.play();
 
             this.two.clear();
 
@@ -141,17 +181,13 @@
             this.spriteDebugOverlay.opacity = 0.0;
 
             this.maskTriangle = this.two.makePath(0, 0, 0, 0, 0, 0);
-            this.maskTriangle.fill = "#000";
-
             this.groupWhaleXRay.mask = this.maskTriangle;
 
             this.two
                 .bind("update", (frame: number) => this.onUpdate(frame))
                 .bind("resize", () => this.onResize())
                 .trigger("resize");
-        }
 
-        start() {
             this.two.play();
         }
 
@@ -232,7 +268,7 @@
         async initialize() {
             this.scene = new Scene(this.$refs.two as HTMLElement);
 
-            await this.scene.initialize();
+            await this.scene.load();
             await utils.timeout(1000);
 
             this.initializing = false;
