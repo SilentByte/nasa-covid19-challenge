@@ -49,6 +49,13 @@
         spritePlanetLeft: any;
         spritePlanetRight: any;
         spritePlanetBottom: any;
+        spriteTriangleBack: any;
+        spriteTriangleBottom: any;
+        spriteTriangleFront: any;
+
+        triangleBackOffsetX = -20;
+        triangleBottomOffsetX = 120;
+        triangleFrontOffsetX = 220;
 
         loadSprite(url: string, x: number = 0, y: number = 0) {
             const capture: any = {
@@ -77,21 +84,27 @@
             [
                 this.spriteDebugOverlay,
                 this.spriteBackground,
-                this.spriteWhale,
-                this.spriteWhaleXRay,
                 this.spritePlanetTop,
                 this.spritePlanetLeft,
                 this.spritePlanetRight,
                 this.spritePlanetBottom,
+                this.spriteWhale,
+                this.spriteWhaleXRay,
+                this.spriteTriangleBack,
+                this.spriteTriangleBottom,
+                this.spriteTriangleFront,
             ] = await Promise.all([
                 this.loadSprite("./assets/debug-overlay.jpg"),
                 this.loadSprite("./assets/background.jpg"),
-                this.loadSprite("./assets/whale.png", 18, 30),
-                this.loadSprite("./assets/whale-xray.png", 342, 232),
                 this.loadSprite("./assets/planet-top.png", 508, -320),
                 this.loadSprite("./assets/planet-left.png", 387, -87),
                 this.loadSprite("./assets/planet-right.png", 648, -68),
                 this.loadSprite("./assets/planet-bottom.png", 542, 195),
+                this.loadSprite("./assets/whale.png", 18, 30),
+                this.loadSprite("./assets/whale-xray.png", 342, 232),
+                this.loadSprite("./assets/triangle-back.png", -20, -32), // -170, -32
+                this.loadSprite("./assets/triangle-bottom.png", -63, 275), // -33, 275
+                this.loadSprite("./assets/triangle-front.png", 40, 5), // 70, 5
             ]);
 
             this.two.clear();
@@ -109,9 +122,16 @@
                 this.spritePlanetLeft,
                 this.spritePlanetRight,
                 this.spritePlanetBottom,
+
+                this.spriteTriangleBack,
+                this.spriteTriangleBottom,
             );
 
-            this.layerForeground.add(this.groupWhale);
+            this.layerForeground.add(
+                this.groupWhale,
+                this.spriteTriangleFront,
+            );
+
             this.layerOverlay.add(this.spriteDebugOverlay);
 
             this.spriteDebugOverlay.opacity = 0.0;
@@ -132,24 +152,44 @@
         }
 
         onUpdate(frame: number) {
-            this.groupWhale.translation.x += Math.sin(frame * 0.001) * 0.05;
-            this.groupWhale.translation.y += Math.cos(frame * 0.01) * 0.10;
-            this.groupWhale.rotation = Math.sin(frame * 0.02) * 0.025;
+            const whaleTriangleTranslationX = Math.sin(frame * 0.001) * 0.05;
+            const whaleTriangleTranslationY = Math.cos(frame * 0.01) * 0.10;
+            const whaleTriangleRotation = Math.sin(frame * 0.02) * 0.025;
+
+            this.groupWhale.translation.x += whaleTriangleTranslationX;
+            this.groupWhale.translation.y += whaleTriangleTranslationY;
+            this.groupWhale.rotation = whaleTriangleRotation;
+
+            // this.spriteTriangleBack.translation.x += whaleTriangleTranslationX;
+            this.spriteTriangleBack.translation.y += whaleTriangleTranslationY;
+            this.spriteTriangleBack.rotation = whaleTriangleRotation;
+
+            // this.spriteTriangleBottom.translation.x += whaleTriangleTranslationX;
+            this.spriteTriangleBottom.translation.y += whaleTriangleTranslationY;
+            this.spriteTriangleBottom.rotation = whaleTriangleRotation;
+
+            // this.spriteTriangleFront.translation.x += whaleTriangleTranslationX;
+            this.spriteTriangleFront.translation.y += whaleTriangleTranslationY;
+            this.spriteTriangleFront.rotation = whaleTriangleRotation;
+
+            this.spriteTriangleBack.translation.x = this.triangleBackOffsetX + Math.cos(frame * 0.01) * 190;
+            this.spriteTriangleBottom.translation.x = this.triangleBottomOffsetX + Math.cos(frame * 0.01) * 190;
+            this.spriteTriangleFront.translation.x = this.triangleFrontOffsetX + Math.cos(frame * 0.01) * 190;
 
             this.spritePlanetTop.translation.x += Math.cos(frame * 0.01 + 200) * 0.02;
-            this.spritePlanetTop.translation.y += Math.cos(frame * 0.01 + 200) * 0.05;
+            this.spritePlanetTop.translation.y += Math.sin(frame * 0.01 + 200) * 0.05;
             this.spritePlanetTop.rotation = Math.sin(frame * 0.02 + 200) * 0.1;
 
             this.spritePlanetLeft.translation.x += Math.cos(frame * 0.01 + 400) * 0.02;
-            this.spritePlanetLeft.translation.y += Math.cos(frame * 0.01 + 400) * 0.05;
+            this.spritePlanetLeft.translation.y += Math.sin(frame * 0.01 + 400) * 0.05;
             this.spritePlanetLeft.rotation = Math.sin(frame * 0.01 + 400) * 0.5;
 
             this.spritePlanetRight.translation.x += Math.cos(frame * 0.01 + 600) * 0.02;
-            this.spritePlanetRight.translation.y += Math.cos(frame * 0.01 + 600) * 0.03;
+            this.spritePlanetRight.translation.y += Math.sin(frame * 0.01 + 600) * 0.03;
             this.spritePlanetRight.rotation = Math.sin(frame * 0.01 + 600) * 0.05;
 
             this.spritePlanetBottom.translation.x += Math.cos(frame * 0.01 + 800) * 0.02;
-            this.spritePlanetBottom.translation.y += Math.cos(frame * 0.01 + 800) * 0.05;
+            this.spritePlanetBottom.translation.y += Math.sin(frame * 0.01 + 800) * 0.05;
             this.spritePlanetBottom.rotation += 0.002;
         }
 
