@@ -29,8 +29,8 @@
     import Two from "two.js";
     import * as utils from "@/utils";
 
-    const PI = Math.PI;
-    const TAU = Math.PI * 2.0;
+    // const PI = Math.PI;
+    // const TAU = Math.PI * 2.0;
 
     class Scene {
         two: Two & any;
@@ -45,22 +45,30 @@
         spriteBackground: any;
         spriteWhale: any;
         spriteWhaleXRay: any;
+        spritePlanetTop: any;
+        spritePlanetLeft: any;
+        spritePlanetRight: any;
+        spritePlanetBottom: any;
 
         loadSprite(url: string, x: number = 0, y: number = 0) {
             const capture: any = {
                 texture: null,
             };
 
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 capture.texture = new (Two as any).Texture(url, () => {
-                    const sprite = this.two.makeSprite(capture.texture);
+                    try {
+                        const sprite = this.two.makeSprite(capture.texture);
 
-                    sprite.scale = 1.0;
-                    sprite.width = capture.texture.width;
-                    sprite.height = capture.texture.height;
-                    sprite.translation.set(x, y);
+                        sprite.scale = 1.0;
+                        sprite.width = capture.texture.width;
+                        sprite.height = capture.texture.height;
+                        sprite.translation.set(x, y);
 
-                    resolve(sprite);
+                        resolve(sprite);
+                    } catch {
+                        reject();
+                    }
                 });
             });
         }
@@ -71,11 +79,19 @@
                 this.spriteBackground,
                 this.spriteWhale,
                 this.spriteWhaleXRay,
+                this.spritePlanetTop,
+                this.spritePlanetLeft,
+                this.spritePlanetRight,
+                this.spritePlanetBottom,
             ] = await Promise.all([
                 this.loadSprite("./assets/debug-overlay.jpg"),
                 this.loadSprite("./assets/background.jpg"),
                 this.loadSprite("./assets/whale.png", 18, 30),
                 this.loadSprite("./assets/whale-xray.png", 342, 232),
+                this.loadSprite("./assets/planet-top.png", 508, -320),
+                this.loadSprite("./assets/planet-left.png", 387, -87),
+                this.loadSprite("./assets/planet-right.png", 648, -68),
+                this.loadSprite("./assets/planet-bottom.png", 542, 195),
             ]);
 
             this.two.clear();
@@ -87,7 +103,14 @@
             this.groupWhale = this.two.makeGroup();
             this.groupWhale.add(this.spriteWhale);
 
-            this.layerBackground.add(this.spriteBackground);
+            this.layerBackground.add(
+                this.spriteBackground,
+                this.spritePlanetTop,
+                this.spritePlanetLeft,
+                this.spritePlanetRight,
+                this.spritePlanetBottom,
+            );
+
             this.layerForeground.add(this.groupWhale);
             this.layerOverlay.add(this.spriteDebugOverlay);
 
@@ -109,8 +132,25 @@
         }
 
         onUpdate(frame: number) {
-            this.groupWhale.translation.y = Math.cos(frame * 0.02) * 5;
+            this.groupWhale.translation.x += Math.sin(frame * 0.001) * 0.05;
+            this.groupWhale.translation.y += Math.cos(frame * 0.01) * 0.10;
             this.groupWhale.rotation = Math.sin(frame * 0.02) * 0.025;
+
+            this.spritePlanetTop.translation.x += Math.cos(frame * 0.01 + 200) * 0.02;
+            this.spritePlanetTop.translation.y += Math.cos(frame * 0.01 + 200) * 0.05;
+            this.spritePlanetTop.rotation = Math.sin(frame * 0.02 + 200) * 0.1;
+
+            this.spritePlanetLeft.translation.x += Math.cos(frame * 0.01 + 400) * 0.02;
+            this.spritePlanetLeft.translation.y += Math.cos(frame * 0.01 + 400) * 0.05;
+            this.spritePlanetLeft.rotation = Math.sin(frame * 0.01 + 400) * 0.5;
+
+            this.spritePlanetRight.translation.x += Math.cos(frame * 0.01 + 600) * 0.02;
+            this.spritePlanetRight.translation.y += Math.cos(frame * 0.01 + 600) * 0.03;
+            this.spritePlanetRight.rotation = Math.sin(frame * 0.01 + 600) * 0.05;
+
+            this.spritePlanetBottom.translation.x += Math.cos(frame * 0.01 + 800) * 0.02;
+            this.spritePlanetBottom.translation.y += Math.cos(frame * 0.01 + 800) * 0.05;
+            this.spritePlanetBottom.rotation += 0.002;
         }
 
         constructor(element: HTMLElement) {
@@ -133,15 +173,24 @@
         scene!: Scene;
         initializing = true;
 
+        async initialize() {
+            this.scene = new Scene(this.$refs.two as HTMLElement);
+
+            await this.scene.initialize();
+            await utils.timeout(1000);
+
+            this.initializing = false;
+            this.scene.start();
+        }
+
         mounted() {
             this.$nextTick(async () => {
-                this.scene = new Scene(this.$refs.two as HTMLElement);
-
-                await this.scene.initialize();
-                await utils.timeout(1000);
-
-                this.initializing = false;
-                this.scene.start();
+                try {
+                    await this.initialize();
+                } catch {
+                    // HACK: Simplify debugging due to insufficient error handling in Two.js.
+                    location.reload();
+                }
             });
         }
 
