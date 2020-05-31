@@ -135,12 +135,10 @@
         two: Two & any;
 
         layerBackground!: Two.Group;
-        layerOverlay!: Two.Group;
 
         groupWhale!: Two.Group;
         groupWhaleXRay!: Two.Group;
 
-        spriteDebugOverlay: any;
         spriteBackground: any;
         spriteWhale: any;
         spriteWhaleXRay: any;
@@ -227,7 +225,6 @@
 
         async load() {
             [
-                this.spriteDebugOverlay,
                 this.spriteBackground,
                 this.spritePlanetTop,
                 this.spritePlanetLeft,
@@ -243,7 +240,6 @@
                 this.soundTheme,
                 this.soundTrump,
             ] = await Promise.all([
-                this.loadSprite("./assets/debug-overlay.jpg"),
                 this.loadSprite("./assets/background.jpg"),
                 this.loadSprite("./assets/planet-top.png", 508, -320),
                 this.loadSprite("./assets/planet-left.png", 387, -87),
@@ -270,14 +266,13 @@
         }
 
         start() {
-            this.soundTheme.volume(0.75);
+            this.soundTheme.volume(0.25);
             this.soundTheme.loop(true);
             this.soundTheme.play();
 
             this.two.clear();
 
             this.layerBackground = this.two.makeGroup();
-            this.layerOverlay = this.two.makeGroup();
 
             this.groupWhaleXRay = this.two.makeGroup(
                 this.spriteTriangleXRay,
@@ -301,10 +296,6 @@
                 this.groupWhale,
                 this.spriteTriangleFront,
             );
-
-            this.layerOverlay.add(this.spriteDebugOverlay);
-
-            this.spriteDebugOverlay.opacity = 0.0;
 
             this.maskTriangle = this.two.makePath(0, 0, 0, 0, 0, 0);
             this.maskTriangle.fill = "#000";
