@@ -52,6 +52,7 @@
         spriteTriangleBack: any;
         spriteTriangleBottom: any;
         spriteTriangleFront: any;
+        spriteTriangleXRay: any;
 
         maskTriangle: any;
 
@@ -91,6 +92,7 @@
                 this.spriteTriangleBack,
                 this.spriteTriangleBottom,
                 this.spriteTriangleFront,
+                this.spriteTriangleXRay,
             ] = await Promise.all([
                 this.loadSprite("./assets/debug-overlay.jpg"),
                 this.loadSprite("./assets/background.jpg"),
@@ -100,9 +102,10 @@
                 this.loadSprite("./assets/planet-bottom.png", 542, 195),
                 this.loadSprite("./assets/whale.png", 18, 30),
                 this.loadSprite("./assets/whale-xray.png", 18, 30),
-                this.loadSprite("./assets/triangle-back.png", -20, -32), // -170, -32
-                this.loadSprite("./assets/triangle-bottom.png", -63, 275), // -33, 275
-                this.loadSprite("./assets/triangle-front.png", 40, 5), // 70, 5
+                this.loadSprite("./assets/triangle-back.png", -20, -32),
+                this.loadSprite("./assets/triangle-bottom.png", -63, 275),
+                this.loadSprite("./assets/triangle-front.png", 40, 5),
+                this.loadSprite("./assets/xray.jpg", 200),
             ]);
 
             this.two.clear();
@@ -110,9 +113,12 @@
             this.layerBackground = this.two.makeGroup();
             this.layerOverlay = this.two.makeGroup();
 
-            this.groupWhale = this.two.makeGroup();
-            this.groupWhaleXRay = this.two.makeGroup(this.spriteWhaleXRay);
-            this.groupWhale.add(
+            this.groupWhaleXRay = this.two.makeGroup(
+                this.spriteTriangleXRay,
+                this.spriteWhaleXRay,
+            );
+
+            this.groupWhale = this.two.makeGroup(
                 this.spriteWhale,
                 this.groupWhaleXRay,
             );
@@ -134,7 +140,7 @@
 
             this.spriteDebugOverlay.opacity = 0.0;
 
-            this.maskTriangle = this.two.makePath(420, -300, 210, 230, 680, 310);
+            this.maskTriangle = this.two.makePath(0, 0, 0, 0, 0, 0);
             this.maskTriangle.fill = "#000";
 
             this.groupWhaleXRay.mask = this.maskTriangle;
@@ -178,6 +184,8 @@
             this.spriteTriangleBack.translation.x = 40 + this.groupWhale.translation.x - 90 + Math.cos(frame * 0.01) * 140;
             this.spriteTriangleBottom.translation.x = 40 + this.groupWhale.translation.x + 50 + Math.cos(frame * 0.01) * 140;
             this.spriteTriangleFront.translation.x = 40 + this.groupWhale.translation.x + 150 + Math.cos(frame * 0.01) * 140;
+
+            this.spriteTriangleXRay.rotation = frame * -0.05;
 
             this.maskTriangle.translation.set(0, 0);
             this.maskTriangle.vertices[0].set(this.spriteTriangleFront.translation.x - 122, this.spriteTriangleFront.translation.y - 300);
