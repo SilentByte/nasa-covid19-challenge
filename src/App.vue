@@ -18,20 +18,27 @@
 
             <div ref="two" class="screen"></div>
 
-            <v-bottom-sheet persistent inset
+            <v-bottom-sheet persistent
                             hide-overlay
-                            width="0"
-                            class="elevation-0"
-                            style="background: none"
+                            no-click-animation
                             :value="true">
 
-                <v-layout row ma-3 align-center justify-center>
+                <v-toolbar flat color="transparent">
+                    <v-spacer />
                     <v-btn large dark icon
+                           class="mx-2"
                            @click="onToggleMute">
                         <v-icon v-if="muted">mdi-music-off</v-icon>
                         <v-icon v-else>mdi-music</v-icon>
                     </v-btn>
-                </v-layout>
+
+                    <v-btn large dark icon
+                           class="mx-2"
+                           @click="onSendMessage">
+                        <v-icon>mdi-message-text</v-icon>
+                    </v-btn>
+                    <v-spacer />
+                </v-toolbar>
             </v-bottom-sheet>
         </v-content>
     </v-app>
@@ -317,6 +324,10 @@
             }
         }
 
+        onSendMessage() {
+            //
+        }
+
         mounted() {
             this.$nextTick(async () => {
                 try {
@@ -338,6 +349,10 @@
 <style lang="scss">
     html {
         overflow-y: hidden !important;
+    }
+
+    .v-dialog.v-bottom-sheet {
+        box-shadow: none;
     }
 
     .screen {
