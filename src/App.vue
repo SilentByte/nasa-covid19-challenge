@@ -27,7 +27,8 @@
                             no-click-animation
                             :value="true">
 
-                <v-toolbar flat dark color="transparent">
+                <v-toolbar flat dark
+                           style="background-color: rgba(0, 0, 0, 0.4)">
                     <v-toolbar-title class="text-uppercase">"Whale in Space"</v-toolbar-title>
 
                     <v-spacer />
