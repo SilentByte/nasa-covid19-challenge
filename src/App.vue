@@ -352,23 +352,40 @@
         }
 
         showMessage(message: string) {
-            const size = Math.random() * 40 + 30;
+            const config = [
+                {
+                    size: 30,
+                    speed: 4,
+                    opacity: 0.7,
+                },
+                {
+                    size: 40,
+                    speed: 5,
+                    opacity: 0.75,
+                },
+                {
+                    size: 50,
+                    speed: 6,
+                    opacity: 0.8,
+                },
+            ][Math.floor(Math.random() * 3)];
+
             const text = this.two.makeText(message, 0, 0, {
                 family: "Ubuntu, sans-serif",
-                size: size,
-                leading: size,
+                size: config.size,
                 alignment: "left",
                 weight: 900,
             });
 
-            text.translation.x = this.two.width + 50;
+            text.translation.x = this.two.width + 50 + Math.random() * 1500;
             text.translation.y = (this.two.height / 2 * (Math.random() * 1.9 - 0.95));
             text.fill = "#fff";
             text.stroke = "#000";
+            text.opacity = config.opacity;
 
             this.messages.push({
                 text,
-                speed: Math.random() * 5 + 3,
+                speed: config.speed,
             });
         }
 
