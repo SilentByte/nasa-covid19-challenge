@@ -377,8 +377,8 @@
                 weight: 900,
             });
 
-            text.translation.x = this.two.width + 50 + Math.random() * 1500;
-            text.translation.y = (this.two.height / 2 * (Math.random() * 1.9 - 0.95));
+            text.translation.x = Math.max(1920, this.two.width) + 50 + Math.random() * 500;
+            text.translation.y = (1080 / 2 * (Math.random() * 1.8 - 0.9));
             text.fill = "#fff";
             text.stroke = "#000";
             text.opacity = config.opacity;
@@ -443,7 +443,7 @@
             this.spritePlanetBottom.rotation += 0.002;
 
             this.messages = this.messages.filter(m => {
-                if(m.text.translation.x > -this.two.width * 2) {
+                if(m.text.translation.x > -Math.max(1920, this.two.width) * 2) {
                     return true;
                 } else {
                     this.two.remove(m.text);
