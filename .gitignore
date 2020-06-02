@@ -4,7 +4,7 @@ dist/
 .vscode/
 .firebase/
 
-.env.local
+.env.production.local
 .env.*.local
 .firebaserc
 

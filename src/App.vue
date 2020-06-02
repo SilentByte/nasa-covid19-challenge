@@ -27,22 +27,32 @@
                             no-click-animation
                             :value="true">
 
-                <v-toolbar flat color="transparent">
+                <v-toolbar flat dark color="transparent">
+                    <v-toolbar-title class="text-uppercase">"Whale in Space"</v-toolbar-title>
+
                     <v-spacer />
-                    <v-btn large dark icon
+
+                    <v-btn large icon
                            class="mx-2"
                            @click="onToggleMute">
                         <v-icon v-if="muted">mdi-music-off</v-icon>
                         <v-icon v-else>mdi-music</v-icon>
                     </v-btn>
 
-                    <v-btn large dark icon
+                    <v-btn large icon
                            class="mx-2"
                            @click="onComposeMessage">
                         <v-icon>mdi-message-text</v-icon>
                     </v-btn>
 
-                    <v-btn dark text
+                    <v-btn large icon
+                           class="mx-2"
+                           target="_blank"
+                           href="https://covid19.spaceappschallenge.org/challenges/covid-challenges/art-it-all/teams/whale-in-space/project">
+                        <v-icon>mdi-rocket-launch</v-icon>
+                    </v-btn>
+
+                    <v-btn text
                            target="_blank"
                            href="https://twitter.com/RicoBeti">
                         @RicoBeti
@@ -75,7 +85,7 @@
                     </div>
 
                     <v-form class="mt-5"
-                            @submit.prevent>
+                            @submit.prevent="">
                         <v-text-field outlined
                                       autofocus
                                       counter="80"
@@ -217,11 +227,18 @@
             });
         }
 
-        collidesWithNormalized(x1: number, y1: number, x2: number, y2: number, radius: number) {
-            const dx = x1 / this.two.width - x2;
-            const dy = y1 / this.two.height - y2;
+        screenToWorld(x: number, y: number) {
+            if(this.two.width > this.two.height) {
+                return new Two.Vector((x - this.two.width / 2) / this.two.scene.scale, (y - this.two.height / 2) / this.two.scene.scale);
+            } else {
+                return new Two.Vector(x / this.two.scene.scale - 1920 / 2, (y - this.two.height / 2) / this.two.scene.scale);
+            }
+        }
 
-            return dx * dx + dy * dy < radius * radius;
+        collidesWithScreenCoordinates(screenX: number, screenY: number, worldX: number, worldY: number, worldRadius: number) {
+            const local = this.screenToWorld(screenX, screenY);
+            return (local.x - worldX) * (local.x - worldX) + (local.y - worldY) * (local.y - worldY)
+                < worldRadius * worldRadius;
         }
 
         async load() {
@@ -281,7 +298,7 @@
         start() {
             this.soundTheme.volume(0.25);
             this.soundTheme.loop(true);
-            this.soundTheme.play();
+            // this.soundTheme.play();
 
             this.two.clear();
 
@@ -334,7 +351,7 @@
         }
 
         showMessage(message: string) {
-            const size = Math.random() * 30 + 20;
+            const size = Math.random() * 40 + 30;
             const text = this.two.makeText(message, 0, 0, {
                 family: "Ubuntu, sans-serif",
                 size: size,
@@ -350,7 +367,7 @@
 
             this.messages.push({
                 text,
-                speed: Math.random() * 3 + 2,
+                speed: Math.random() * 5 + 3,
             });
         }
 
@@ -408,7 +425,7 @@
             this.spritePlanetBottom.rotation += 0.002;
 
             this.messages = this.messages.filter(m => {
-                if(m.text.translation.x > -this.two.width * 4) {
+                if(m.text.translation.x > -this.two.width * 2) {
                     return true;
                 } else {
                     this.two.remove(m.text);
@@ -423,9 +440,9 @@
 
         actions = [
             {
-                x: 0.4,
-                y: 0.4,
-                radius: 0.1,
+                x: -210,
+                y: -100,
+                radius: 150,
                 action: () => {
                     if(!this.soundTrump.playing()) {
                         this.soundTrump.play();
@@ -433,17 +450,17 @@
                 },
             },
             {
-                x: 0.76,
-                y: 0.28,
-                radius: 0.05,
+                x: 508,
+                y: -320,
+                radius: 50,
                 action: () => {
                     window.open("https://www.worldometers.info/coronavirus/", "_blank");
                 },
             },
             {
-                x: 0.84,
-                y: 0.45,
-                radius: 0.05,
+                x: 652,
+                y: -68,
+                radius: 70,
                 action: () => {
                     if(!this.soundTwitter.playing()) {
                         this.soundTwitter.play();
@@ -464,15 +481,14 @@
                             "#lockdown",
                             "#airportsclosed",
                             "#stuckathome",
-                            "#who",
                         ].forEach(m => this.showMessage(m));
                     }
                 },
             },
             {
-                x: 0.78,
-                y: 0.63,
-                radius: 0.05,
+                x: 542,
+                y: 195,
+                radius: 65,
                 action: () => {
                     if(!this.soundBigBen.playing()) {
                         this.soundBigBen.play();
@@ -481,9 +497,9 @@
                 },
             },
             {
-                x: 0.65,
-                y: 0.53,
-                radius: 0.15,
+                x: 225,
+                y: 60,
+                radius: 140,
                 action: () => {
                     window.open("https://www.nytimes.com/2020/04/07/opinion/digital-privacy-coronavirus.html", "_blank");
                 },
@@ -492,16 +508,15 @@
 
         onMouseClick(e: MouseEvent) {
             this.actions.forEach(a => {
-                if(this.collidesWithNormalized(e.clientX, e.clientY, a.x, a.y, a.radius)) {
+                if(this.collidesWithScreenCoordinates(e.clientX, e.clientY, a.x, a.y, a.radius)) {
                     a.action();
                 }
             });
         }
 
         onMouseMove(root: HTMLElement, e: MouseEvent) {
-            console.log(e.clientX / this.two.width + " " + e.clientY / this.two.height);
             root.style.cursor
-                = this.actions.some(a => this.collidesWithNormalized(e.clientX, e.clientY, a.x, a.y, a.radius))
+                = this.actions.some(a => this.collidesWithScreenCoordinates(e.clientX, e.clientY, a.x, a.y, a.radius))
                 ? "pointer"
                 : "default";
         }
@@ -513,7 +528,7 @@
     export default class App extends Vue {
         scene!: Scene;
         initializing = true;
-        muted = false;
+        muted = true;
         messageDialog = false;
         message = "";
         messages: string[] = [];
@@ -537,7 +552,7 @@
             db
                 .collection("messages")
                 .orderBy("createdOn", "desc")
-                .limit(20)
+                .limit(10)
                 .get()
                 .then(snap => {
                     snap.docs.forEach(doc => this.messages.push(doc.data().text));
