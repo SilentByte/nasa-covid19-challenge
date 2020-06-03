@@ -25,7 +25,7 @@
             <v-bottom-sheet persistent
                             hide-overlay
                             no-click-animation
-                            :value="true">
+                            :value="!initializing">
 
                 <v-toolbar flat dark
                            style="background-color: rgba(0, 0, 0, 0.4)">
@@ -130,7 +130,10 @@
     } from "vue-property-decorator";
 
     import Two from "two.js";
-    import { Howl } from "howler";
+    import {
+        Howl,
+        Howler,
+    } from "howler";
 
     import {
         db,
@@ -164,6 +167,10 @@
         spriteTriangleFront: any;
         spriteTriangleXRay: any;
         maskTriangle: any;
+
+        analyzer!: AnalyserNode;
+        analyzerData!: Float32Array;
+        analyzerPath!: Two.Path;
 
         soundTheme!: Howl;
         soundTrump!: Howl;
@@ -301,6 +308,10 @@
             this.soundTheme.loop(true);
             // this.soundTheme.play();
 
+            this.analyzer = Howler.ctx.createAnalyser();
+            this.analyzerData = new Float32Array(this.analyzer.fftSize);
+            Howler.masterGain.connect(this.analyzer);
+
             this.two.clear();
 
             this.layerBackground = this.two.makeGroup();
@@ -340,15 +351,23 @@
                 .bind("resize", () => this.onResize())
                 .trigger("resize");
 
+            this.analyzerPath = this.two.makePath(...new Array(1920 * 2).fill(0), true);
+            this.analyzerPath.linewidth = 8;
+            this.analyzerPath.stroke = "#fff";
+            this.analyzerPath.noFill();
+            this.analyzerPath.opacity = 0;
+
             this.two.play();
         }
 
         mute() {
             this.soundTheme.stop();
+            this.analyzerPath.opacity = 0;
         }
 
         unmute() {
             this.soundTheme.play();
+            this.analyzerPath.opacity = 0.25;
         }
 
         showMessage(message: string) {
@@ -454,6 +473,19 @@
             this.messages.forEach(m => {
                 m.text.translation.x -= m.speed;
             });
+
+            if(frame % 2 === 0) {
+                this.analyzer.getFloatTimeDomainData(this.analyzerData);
+            }
+
+            this.analyzerPath.vertices.forEach((v, i) => v.lerp(
+                new Two.Vector(
+                    i - 1920 / 2,
+                    this.analyzerData[Math.floor(this.analyzerData.length / this.analyzerPath.vertices.length) * i]
+                    * (Math.abs(i - this.analyzerPath.vertices.length / 2) / this.analyzerPath.vertices.length * 400 + 50)
+                    + 1080 / 2 - 100,
+                ), 0.8,
+            ));
         }
 
         actions = [
