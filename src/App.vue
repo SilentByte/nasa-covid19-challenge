@@ -10,9 +10,12 @@
             <v-overlay color="background"
                        opacity="1"
                        :value="initializing">
-                <v-layout column class="text-center">
+                <v-layout column align-center justify-center>
                     <v-progress-circular indeterminate
                                          size="60" />
+                    <div class="mt-5">{{ initializationMessage }}
+                        <v-icon>mdi-rocket-launch</v-icon>
+                    </div>
                 </v-layout>
             </v-overlay>
 
@@ -578,6 +581,7 @@
     export default class App extends Vue {
         scene!: Scene;
         initializing = true;
+        initializationMessage = "Reaching for space and beyond…";
         muted = true;
         messageDialog = false;
         message = "";
@@ -594,7 +598,7 @@
             this.scene = new Scene(this.$refs.two as HTMLElement);
 
             await this.scene.load();
-            await utils.timeout(1000);
+            await utils.timeout(1500);
 
             this.initializing = false;
             this.scene.start();
@@ -683,9 +687,13 @@
                 try {
                     await this.initialize();
                 } catch(e) {
-                    // HACK: Simplify debugging due to insufficient error handling in Two.js.
-                    console.error(e);
-                    location.reload();
+                    if(process.env.NODE_ENV === "development") {
+                        // HACK: Simplify debugging due to insufficient error handling in Two.js.
+                        console.error(e);
+                        location.reload();
+                    } else {
+                        this.initializationMessage = "Oh no! :-( Something went wrong.";
+                    }
                 }
             });
         }
