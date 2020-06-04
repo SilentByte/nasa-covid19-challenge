@@ -7,7 +7,8 @@
 <template>
     <v-app>
         <v-content>
-            <v-overlay class="slow-fade"
+            <v-overlay v-if="!launched"
+                       class="slow-fade"
                        color="background"
                        :opacity="1"
                        :style="{ 'opacity': initializing ? 1 : 0 }"
@@ -15,10 +16,22 @@
                 <v-layout column align-center justify-center
                           class="quick-fade"
                           :style="{ 'opacity': initializing ? 1 : 0 }">
-                    <v-progress-circular indeterminate
-                                         size="60" />
-                    <div class="mt-5">{{ initializationMessage }}
-                        <v-icon>mdi-rocket-launch</v-icon>
+
+                    <v-btn x-large dark icon
+                           width="200"
+                           height="200"
+                           :loading="loading"
+                           @click="onLaunch">
+                        <v-icon size="120">mdi-rocket-launch</v-icon>
+                        <template slot="loader">
+                            <v-progress-circular indeterminate
+                                                 size="80"
+                                                 width="8" />
+                        </template>
+                    </v-btn>
+
+                    <div class="mt-5 quick-fade text-uppercase">
+                        {{ initializationMessage }}
                     </div>
                 </v-layout>
             </v-overlay>
@@ -312,7 +325,7 @@
         }
 
         start() {
-            this.soundTheme.volume(0.25);
+            this.soundTheme.volume(0.75);
             this.soundTheme.loop(true);
             // this.soundTheme.play();
 
@@ -585,9 +598,11 @@
     @Component
     export default class App extends Vue {
         scene!: Scene;
+        loading = true;
         initializing = true;
-        initializationMessage = "Reaching for space and beyond…";
-        muted = true;
+        initializationMessage = "Reaching for space and beyond";
+        launched = false;
+        muted = false;
         messageDialog = false;
         message = "";
         messages: string[] = [];
@@ -624,14 +639,23 @@
                     snap.docs.forEach(doc => this.messages.push(doc.data().text));
                 });
 
-            this.initializing = false;
-            this.messageShowInterval = setInterval(() => this.onShowNextMessage(), 2000);
+            this.loading = false;
+            this.initializationMessage = "Click to launch";
         }
 
         showSnackbar(state: SnackbarState, text: string) {
             this.snackbar = true;
             this.snackbarColor = state;
             this.snackbarText = text;
+        }
+
+        onLaunch() {
+            this.initializing = false;
+            this.messageShowInterval = setInterval(() => this.onShowNextMessage(), 2000);
+
+            this.scene.unmute();
+
+            setTimeout(() => this.launched = true, 3000);
         }
 
         onToggleMute() {
