@@ -7,10 +7,14 @@
 <template>
     <v-app>
         <v-content>
-            <v-overlay color="background"
-                       opacity="1"
-                       :value="initializing">
-                <v-layout column align-center justify-center>
+            <v-overlay class="slow-fade"
+                       color="background"
+                       :opacity="1"
+                       :style="{ 'opacity': initializing ? 1 : 0 }"
+                       :value="true">
+                <v-layout column align-center justify-center
+                          class="quick-fade"
+                          :style="{ 'opacity': initializing ? 1 : 0 }">
                     <v-progress-circular indeterminate
                                          size="60" />
                     <div class="mt-5">{{ initializationMessage }}
@@ -21,6 +25,7 @@
 
             <div ref="two"
                  class="screen"
+                 :style="{ 'filter': initializing ? 'blur(20px)' : 'none' }"
                  @click="onMouseClick"
                  @mousemove="onMouseMove">
             </div>
@@ -600,7 +605,6 @@
             await this.scene.load();
             await utils.timeout(1500);
 
-            this.initializing = false;
             this.scene.start();
 
             db
@@ -620,6 +624,7 @@
                     snap.docs.forEach(doc => this.messages.push(doc.data().text));
                 });
 
+            this.initializing = false;
             this.messageShowInterval = setInterval(() => this.onShowNextMessage(), 2000);
         }
 
@@ -721,5 +726,15 @@
         background-color: #121212;
         background-image: url("./assets/screen-background.jpg");
         background-size: 100% 100%;
+
+        transition: filter ease 4s
+    }
+
+    .slow-fade {
+        transition: opacity ease-in 3s !important;
+    }
+
+    .quick-fade {
+        transition: opacity ease-in 1s !important;
     }
 </style>
